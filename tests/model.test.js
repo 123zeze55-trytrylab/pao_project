@@ -26,3 +26,13 @@ test('malformed backups rejected and unsafe image URLs removed',()=>{
  assert.throws(()=>normalize([{id:'a',status:'empty'},{id:'a',status:'empty'}]))
  assert.equal(normalize([{id:1,status:'empty',image:'javascript:alert(1)'}])[0].image,null)
 })
+
+test('quick entries preserve unknown dates and amounts through backup',()=>{
+ const [i]=normalize([{dataVersion:2,id:'quick',name:'待确认',status:'active',openedDate:null,expireDate:null,amount:null}])
+ assert.equal(i.datePrecision,'unknown');assert.equal(i.amount,null);assert.equal(i.expireDate,null)
+ assert.deepEqual(normalize(JSON.parse(JSON.stringify([i]))),[i])
+})
+test('estimated dates and stop reasons survive migration',()=>{
+ const [i]=normalize([{dataVersion:2,id:'approx',name:'精华',status:'discarded',openedDate:'2026-01-01',expireDate:'2027-01-01',datePrecision:'approximate',stopReason:'不适',amount:75}])
+ assert.equal(i.datePrecision,'approximate');assert.equal(i.stopReason,'不适');assert.equal(i.amount,75)
+})
