@@ -10,7 +10,7 @@
 /* Stable card slots: variable detail content belongs in the detail dialog. */
 .grid{align-items:stretch}.grid>.card,.grid>.card:only-child{display:flex;flex-direction:column;grid-column:auto;min-width:0}.grid>.card .photo,.grid>.card:only-child .photo{height:130px;min-height:130px;flex:0 0 130px}.grid>.card .card-body,.grid>.card:only-child .card-body{display:flex;flex-direction:column;padding:18px;flex:1;min-width:0}.card .product-title,.grid>.card:only-child h3.product-title{height:48px;min-height:48px;margin:0 0 10px;line-height:24px}.product-name{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere;text-align:left;font-weight:500;font-size:16px;line-height:24px;padding:0;border-radius:3px;width:100%;min-height:0;max-height:48px}.category-slot{display:flex;align-items:center;justify-content:space-between;gap:6px;height:30px;min-height:30px;margin-bottom:12px}.category-slot .tag{margin:0;max-width:65%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.unclassified{background:#f3efe9;color:#a2978a}.details-link{font-size:10px;color:var(--muted);padding:5px 0 5px 5px;min-height:28px;white-space:nowrap}.card-facts{margin:0;height:84px;min-height:84px}.card-row{display:grid;grid-template-columns:34px minmax(0,1fr);gap:8px;align-items:baseline;line-height:28px;font-size:11px}.card-row dt{color:#a08f7d}.card-row dd{margin:0;color:#776e63;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.card-query{height:32px;min-height:32px;line-height:32px;font-size:10px;color:var(--red);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:8px 0}.card-query.quiet{color:#b1a697}.query-link{padding:0;min-height:30px;font-size:11px;color:var(--red)}.card .actions{margin-top:auto;flex-wrap:nowrap;padding-top:8px}.card .actions button{min-width:0;white-space:nowrap}.detail-name{overflow-wrap:anywhere;line-height:1.7}.detail-facts{background:#f3eee5;padding:15px;border-radius:12px}.detail-facts .card-row{grid-template-columns:76px minmax(0,1fr);padding:8px 0;line-height:1.8}.detail-facts dd{white-space:normal;overflow-wrap:anywhere;overflow:visible}
 @media(max-width:650px){.grid>.card .photo,.grid>.card:only-child .photo{height:110px;min-height:110px;flex-basis:110px}.grid>.card .card-body,.grid>.card:only-child .card-body{padding:12px}.product-name{font-size:14px}.card-row{grid-template-columns:25px minmax(0,1fr);gap:5px;font-size:10px}.card .actions button{font-size:10px;padding:9px 5px}.category-slot .tag{font-size:9px;padding:4px 6px}.category-slot{gap:2px}.details-link{font-size:9px}.card-query{font-size:9px}.grid>.card:only-child .photo .tag{right:10px;top:10px;font-size:10px;padding:5px 8px}}
-textarea{font:inherit;color:inherit;resize:vertical;width:100%;border:1px solid var(--line);background:var(--white);border-radius:10px;padding:13px;line-height:1.9}textarea:focus-visible{outline:2px solid var(--red)}.raw-input{white-space:pre-wrap;overflow-wrap:anywhere}.parse-notes{padding-left:18px;font-size:11px;line-height:1.9;color:var(--muted)}</style>
+textarea{font:inherit;color:inherit;resize:vertical;width:100%;border:1px solid var(--line);background:var(--white);border-radius:10px;padding:13px;line-height:1.9}textarea:focus-visible{outline:2px solid var(--red)}.raw-input{white-space:pre-wrap;overflow-wrap:anywhere}.parse-notes{padding-left:18px;font-size:11px;line-height:1.9;color:var(--muted)}.compact-state{font-size:11px;color:var(--muted);padding:8px 0;border-bottom:1px solid var(--line)}.duration-question{border:1px solid #d4a5ae;background:#faf0f0;padding:14px;border-radius:12px}.duration-question legend{padding:0 5px;color:var(--red)}.original-text{margin-top:0}.original-text p{font-size:12px}</style>
 </head>
 <body>
 <header><div class="brand">D.PAO<small>数字梳妆台</small></div><span class="version">整理模式 · 交互原型</span></header>
@@ -95,13 +95,17 @@ function showDetails(id){
 
 function chineseNumber(t){if(/^\d+$/.test(t))return Number(t);const map={'一':1,'二':2,'两':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10};if(t==='十')return 10;if(t.includes('十')){const [a,b]=t.split('十');return (a?map[a]:1)*10+(b?map[b]:0)}return map[t]||null}
 function extractSentence(raw){
- const d=fresh('existing');d.rawInput=raw;d.parseNotes=[];
+ const d=fresh('existing');d.rawInput=raw;d.parseNotes=[];d.compactReview=true;
  const text=raw.trim().replace(/\s+/g,' '),clauses=text.split(/[，,。；;\n]/).map(x=>x.trim()).filter(Boolean);
  if(/(?:还没|尚未|没有|没|未)(?:拆|开封)|未开封|囤货/.test(text))d.status='unopened';
  // Product identity remains a suggestion: no nickname-to-SKU matching.
  const suffix=/(?:面霜|精华水|精华液|精华|乳液|化妆水|爽肤水|柔肤水|洁面乳|洁面|洗面奶|卸妆油|卸妆水|防晒霜|防晒|眼霜|面膜|身体乳|小棕瓶|小黑瓶)/;
  const candidate=clauses.find(c=>suffix.test(c));
  if(candidate){let c=candidate.replace(/^.*?(?:买的|买了|名字是|叫做|叫)/,'').replace(/^(?:我(?:的)?|这(?:一)?瓶|这(?:一)?个|今天(?:刚)?(?:开了|开封了)?|刚(?:开了|开封了))\s*/,'');const m=c.match(new RegExp('^(.{0,45}?'+suffix.source+')'));if(m)d.name=m[1].trim();}
+ // Remove conversational measure words without a fixed list of brand names.
+ d.name=d.name.replace(/^(?:(?:今天|昨天|刚刚|刚|我|这|一个|一瓶|瓶|支|罐|开了|开封了|打开了|新开了|开了瓶|开了一瓶|开了支|开了一支))+/,'').trim();
+ const bareBrand=clauses.find(c=>c!==candidate&&/^[\u4e00-\u9fffA-Za-z][\u4e00-\u9fffA-Za-z .&-]{1,24}$/.test(c)&&!/(?:今天|昨天|刚|开|拆|用|买|写|标|月|年|天|周|半|剩|保质|有效|期限|忘|不|查|香|黏|粘|腻|肤感|喜欢|好|难|刺激|搓泥|还行|滋润|清爽|吸收|质地|味道)/.test(c)&&!suffix.test(c));
+ if(bareBrand){d.brandCandidate=bareBrand;d.parseNotes.push('检测到独立名称片段「'+bareBrand+'」，请确认是否为品牌。');if(d.name&&new RegExp('^'+suffix.source+'$').test(d.name))d.name=bareBrand+d.name;}
  if(!d.name)d.parseNotes.push('没有可靠识别出产品名称，请补名称或照片。');
  const cats=[[/卸妆/,'卸妆'],[/洗面奶|洁面/,'洁面'],[/眼霜/,'眼部护理'],[/面霜/,'面霜'],[/精华水|化妆水|爽肤水|柔肤水/,'化妆水'],[/精华/,'精华'],[/乳液/,'乳液'],[/面膜/,'面膜'],[/防晒/,'防晒'],[/身体乳/,'身体护理']];
  for(const [re,cat] of cats)if(re.test(d.name)){d.category=cat;break}
@@ -127,6 +131,10 @@ function extractSentence(raw){
   if(months&&months<=120){d.paoMode='manual';d.months=months;d.parseNotes.push('已提取开封后使用时长，请与瓶身或品牌说明核对。')}
   else if(noPeriod||/帮我查|查一下|查查/.test(text)){d.paoMode='lookup';d.lookup=true;d.parseNotes.push('查资料仍为模拟演示，未经确认不改期限。')}
  }
+ if(d.status==='active'&&!d.months){
+ const duration=text.match(/(?:写(?:了|着|的)?|标(?:了|着|注)?)[：:\s]*([一二两三四五六七八九十\d]+)\s*(?:个)?月/);
+ if(duration){const n=chineseNumber(duration[1]);if(n>=1&&n<=120){d.durationCandidate=n;d.durationDisposition='';d.parseNotes.push('提到了'+n+'个月，但用途未明确，需要确认。');}}
+ }
  // Only full EXP dates are converted. Month-only labels are not expanded into invented days.
  const exp=text.match(/(?:EXP|有效期(?:至)?|到期(?:日)?|限期使用(?:日期)?)[：:\s]*(\d{4})[年\/.\-](\d{1,2})(?:[月\/.\-](\d{1,2})日?)?/i);
  if(exp){if(exp[3]){const value=`${exp[1]}-${exp[2].padStart(2,'0')}-${exp[3].padStart(2,'0')}`;if(Number.isFinite(dayValue(value)))d.packageExpiry=value;else d.parseNotes.push('包装日期格式无效，请核对。')}else d.parseNotes.push('包装有效期只写到月份，未擅自补成月末；请按品牌说明核实。')}
@@ -143,7 +151,25 @@ function newBottle(){state.newSource='direct';modal(head('今天开了一瓶','�
 function chooseStock(){const list=records.filter(r=>r.status==='unopened');modal(head('选择刚开封的那一瓶')+(list.length?list.map(r=>button('openStock',`<strong>${escape(name(r))}</strong><span>${escape(deadline(r))}</span>`,'scene',idAttr(r.id))).join(''):`<p class="hint">囤货柜还是空的，可以直接新增。</p>${button('newDirect','直接新增','primary wide')}`),'button')}
 function begin(scene,r=null,opening=false){state.scene=scene;state.edit=r?.id||null;state.newSource=opening?'stock':'direct';state.draft=r?{...fresh(scene),...r,months:r.months||'',lookup:!!r.query&&r.query!=='skipped',paoMode:r.months?'manual':r.query?'lookup':'unknown',status:opening?'active':r.status,dateMode:opening?'today':r.dateMode,openedDate:opening?today():r.openedDate||''}:fresh(scene);drawForm()}
 function syncDraft(){const form=$('#record-form');if(!form||!state.draft)return;form.querySelectorAll('[data-field]').forEach(el=>{state.draft[el.dataset.field]=el.type==='checkbox'?el.checked:el.value})}
+function drawCompact(error=''){
+ const d=state.draft;
+ let html=head('先确认，我记对了吗？','只核对识别结果；需要时再展开其他资料。')+`<details class="original-text"><summary>查看 / 修改原话</summary><p class="raw-input">${escape(d.rawInput)}</p>${button('reviseSentence','修改原话','muted-link')}</details><form id="record-form" novalidate><label class="field">产品名称<input data-field="name" aria-label="产品名称" maxlength="100" value="${escape(d.name)}" placeholder="请补充名称，或展开添加照片"></label><label class="field">产品类型<select data-field="category" aria-label="产品类型"><option value="">未分类</option>${CATEGORIES.map(c=>`<option ${d.category===c?'selected':''}>${c}</option>`).join('')}</select></label><div class="compact-state">${d.status==='unopened'?'尚未开封':'已经开封'}</div>`;
+ if(d.status==='active'){
+  if(['today','exact'].includes(d.dateMode))html+=`<label class="field">开封日期<input type="date" data-field="openedDate" aria-label="开封日期" value="${d.openedDate}" max="${today()}"></label>`;
+  else html+=`<p class="hint">${d.dateMode==='clue'?'开封线索：'+escape(d.openingNote):'开封时间：未知，不会自动填成今天'}</p>`;
+  if(d.months)html+=`<label class="field">开封后能用多久（个月）<input type="number" data-field="months" aria-label="开封后能用多久（个月）" min="1" max="120" value="${d.months}"></label>`;
+  else if(d.durationCandidate&&!d.durationDisposition)html+=`<fieldset class="duration-question"><legend>你说的「${d.durationCandidate}个月」具体指什么？</legend><div class="choices">${button('durationMeaning','开封后能用这么久','', 'data-value="opened"')}${button('durationMeaning','包装总保质期','', 'data-value="package"')}${button('durationMeaning','不确定，先保留','', 'data-value="unknown"')}</div><p class="hint">开封后时长与包装总保质期不同，不自动混用。</p></fieldset>`;
+  else html+=`<p class="hint">开封后能用多久：${d.durationDisposition==='package'?'原话为包装总保质期，开封后时长仍未知':d.durationDisposition==='unknown'?'时长用途未确认':d.lookup?'待查询（目前为模拟）':'未提供'}</p>`;
+ }
+ if(d.packageExpiry)html+=`<label class="field">包装上写的有效期（EXP）<input data-field="packageExpiry" aria-label="包装上写的有效期（EXP）" type="date" value="${d.packageExpiry}"></label>`;
+ const notes=d.parseNotes.filter(n=>!n.startsWith('名称和类型是提取建议')&&!n.startsWith('已提取开封后')&&!n.startsWith('提到了'));
+ if(notes.length)html+=`<details><summary>还有哪些信息需要留意？</summary><ul class="parse-notes">${notes.map(n=>`<li>${escape(n)}</li>`).join('')}</ul></details>`;
+ if(error)html+=`<p class="error" role="alert">${escape(error)}</p>`;
+ html+=`<p class="hint">本地规则体验版，结果仍可能出错。未接入 AI 或语音。</p><button class="primary wide" type="submit">保存，继续下一瓶</button>${button('saveEnd','保存，结束整理','secondary wide')}${button('expandReview','修改其他信息 / 添加照片','wide muted-link')}</form>`;
+ modal(html,'input[data-field=name]');
+}
 function drawForm(error=''){
+ if(state.draft?.compactReview&&!state.edit)return drawCompact(error);
  const d=state.draft,active=d.status==='active',stock=d.status==='unopened',archived=!active&&!stock;
  const title=state.edit&&state.newSource!=='stock'?'补充这一瓶':state.scene==='new'?'今天开了一瓶':stock?'记下一瓶囤货':'记下一瓶正在用的';
  let html=head(d.rawInput&&!state.edit?'先确认，我记对了吗？':title,stock?'未开封不需要填写开封日期。':active?'名称或照片至少填一个；不确定的信息可以留空。':'这里只修改资料，不会重新加入正在使用。');
@@ -164,7 +190,7 @@ function drawForm(error=''){
  html+=`<button type="submit" class="primary wide" ${state.photoBusy||readOnly?'disabled':''}>${state.photoBusy?'照片处理中…':state.edit?'保存这一瓶':'保存，继续下一瓶'}</button>${!state.edit?button('saveEnd','保存，结束整理','secondary wide'):''}</form>`;
  modal(html,'input[data-field=name]');
 }
-function saveRecord(end=false){syncDraft();const d=state.draft;if(state.photoBusy)return toast('照片正在处理，请稍等');if(!d.name.trim()&&!d.image)return drawForm('名称或照片至少提供一个，让你下次能认出它。');let openedDate=null,earliest=null,latest=null,months=null;
+function saveRecord(end=false){syncDraft();const d=state.draft;if(d.compactReview&&d.durationCandidate&&!d.durationDisposition)return drawForm('请确认这段时长的用途，也可以选择「不确定，先保留」。');if(state.photoBusy)return toast('照片正在处理，请稍等');if(!d.name.trim()&&!d.image)return drawForm('名称或照片至少提供一个，让你下次能认出它。');let openedDate=null,earliest=null,latest=null,months=null;
  if(d.status==='active'){
  if(['today','exact'].includes(d.dateMode)){openedDate=d.openedDate;if(!Number.isFinite(dayValue(openedDate))||openedDate>today())return drawForm('请填写有效的开封日期，不能晚于今天。')}
  if(d.dateMode==='approximate'){if(state.edit&&d.originalRange===d.range&&d.openedEarliest&&d.openedLatest){earliest=d.openedEarliest;latest=d.openedLatest}else{const [min,max]=d.range.split('-').map(Number);earliest=ago(max);latest=ago(min)}}
@@ -172,7 +198,7 @@ function saveRecord(end=false){syncDraft();const d=state.draft;if(state.photoBus
  }
  if(d.packageExpiry&&!Number.isFinite(dayValue(d.packageExpiry)))return drawForm('包装有效期不是有效日期。');
  const old=records.find(r=>r.id===state.edit),lookup=d.status==='active'&&d.paoMode==='lookup'&&d.lookup;
- const record={...old,rawInput:d.rawInput||old?.rawInput||'',openingNote:d.openingNote||'',parseNotes:d.parseNotes||[],id:old?.id||uid(),name:d.name.trim(),image:d.image,category:d.category.trim(),status:d.status,dateMode:d.dateMode,openedDate,openedEarliest:earliest,openedLatest:latest,range:d.range,packageExpiry:d.packageExpiry||null,months,query:lookup?(old?.query&&old.query!=='skipped'?old.query:'pending'):null,recordedDate:old?.recordedDate||today()};
+ const record={...old,rawInput:d.rawInput||old?.rawInput||'',openingNote:d.openingNote||'',parseNotes:d.parseNotes||[],durationCandidate:d.durationCandidate||null,durationDisposition:d.durationDisposition||null,brandCandidate:d.brandCandidate||null,id:old?.id||uid(),name:d.name.trim(),image:d.image,category:d.category.trim(),status:d.status,dateMode:d.dateMode,openedDate,openedEarliest:earliest,openedLatest:latest,range:d.range,packageExpiry:d.packageExpiry||null,months,query:lookup?(old?.query&&old.query!=='skipped'?old.query:'pending'):null,recordedDate:old?.recordedDate||today()};
  if(old&&['empty','discarded'].includes(old.status)){Object.assign(record,{dateMode:old.dateMode,openedDate:old.openedDate,openedEarliest:old.openedEarliest,openedLatest:old.openedLatest,months:old.months,query:old.query,reference:old.reference,demoResult:old.demoResult})}
  if(record.query==='pending'&&!record.demoResult)record.demoResult=mockType(records.filter(r=>r.demoResult).length);
  if(!lookup&&(!old||!['empty','discarded'].includes(old.status))){delete record.reference;delete record.demoResult;delete record.nextCheck}
@@ -189,7 +215,7 @@ function review(id,status=null){const r=records.find(x=>x.id===id);state.queryId
 function exportData(){try{const data=readOnly?(localStorage.getItem(KEY)||''):JSON.stringify({prototype:'dpao-review-v1',records},null,2),blob=new Blob([data],{type:'application/json'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=`DPAO-prototype-${today()}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}catch{toast('无法读取本地记录，请检查浏览器权限')}}
 function seedDemo(){if(!confirm('添加三瓶独立示例，不覆盖你已有的记录。查询结果均为模拟。继续吗？'))return;const examples=[{...fresh('existing'),id:uid(),name:'示例 A · 日期明确的面霜',category:'面霜',status:'active',dateMode:'exact',openedDate:ago(60),months:12,query:'official',demoResult:'official'},{...fresh('existing'),id:uid(),name:'示例 B · 记不清的精华',category:'精华',status:'active',dateMode:'approximate',range:'30-90',openedDate:null,openedEarliest:ago(90),openedLatest:ago(30),months:null,query:'similar',demoResult:'similar'},{...fresh('stock'),id:uid(),name:'示例 C · 还没开的乳液',category:'乳液',status:'unopened',packageExpiry:after(300),months:null,query:null}].map(r=>({...r,recordedDate:today()}));if(persist([...records,...examples])){state.session.push(...examples.map(r=>r.id));render();toast('已添加示例。可在「资料待确认」中体验不同结果。')}}
 document.addEventListener('click',e=>{const target=e.target.closest('[data-action]');if(!target)return;const a=target.dataset.action,id=target.dataset.id,value=target.dataset.value;syncDraft();switch(a){
- case 'sentence':state.edit=null;sentenceInput();break;case 'reviseSentence':sentenceInput(state.draft?.rawInput||'');break;case 'close':closeModal();break;case 'start':case 'continue':start();break;case 'new':newBottle();break;case 'newDirect':begin('new');break;case 'chooseStock':chooseStock();break;case 'stockAdd':begin('stock');break;case 'scene':begin(target.dataset.scene);break;
+ case 'expandReview':state.draft.compactReview=false;drawForm();break;case 'durationMeaning':state.draft.durationDisposition=value;if(value==='opened'){state.draft.months=state.draft.durationCandidate;state.draft.paoMode='manual';state.draft.lookup=false}drawForm();break;case 'sentence':state.edit=null;sentenceInput();break;case 'reviseSentence':sentenceInput(state.draft?.rawInput||'');break;case 'close':closeModal();break;case 'start':case 'continue':start();break;case 'new':newBottle();break;case 'newDirect':begin('new');break;case 'chooseStock':chooseStock();break;case 'stockAdd':begin('stock');break;case 'scene':begin(target.dataset.scene);break;
  case 'nav':state.page=target.dataset.page;state.search='';render();break;case 'home':state.page='home';render();window.scrollTo(0,0);break;case 'queries':state.page='queries';render();window.scrollTo(0,0);break;case 'summary':case 'end':$('#modal').close();state.page='summary';render();window.scrollTo(0,0);break;case 'newSession':state.session=[];state.page='home';render();break;
  case 'dateMode':state.draft.dateMode=value;if(value==='today')state.draft.openedDate=today();drawForm();break;case 'paoMode':state.draft.paoMode=value;state.draft.lookup=value==='lookup';drawForm();break;case 'removePhoto':state.draft.image=null;drawForm();break;case 'saveEnd':saveRecord(true);break;
  case 'edit':{const r=records.find(x=>x.id===id);begin(r.status==='unopened'?'stock':'existing',r);state.draft.originalRange=r.range;break}case 'openStock':{const r=records.find(x=>x.id===id);begin('new',r,true);break}
