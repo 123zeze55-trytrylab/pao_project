@@ -5,7 +5,7 @@ const html=readFileSync(resolve('prototypes/dpao-review.html'),'utf8')
 const url=process.env.DPAO_PROTOTYPE_FILE_URL||'http://127.0.0.1:5173/prototypes/dpao-review.html'
 test.beforeEach(async({page})=>{if(!process.env.DPAO_PROTOTYPE_FILE_URL)await page.route(url,route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}))})
 async function enter(page){await page.goto(url);await page.evaluate(()=>localStorage.removeItem('dpao_review_prototype_v1'));await page.reload()}
-async function existing(page,name){await page.getByRole('button',{name:'整理已有产品',exact:true}).click();await page.getByRole('button',{name:/已经开封，正在使用/}).click();await page.getByLabel('产品名称',{exact:true}).fill(name)}
+async function existing(page,name){await page.getByRole('button',{name:'逐项整理',exact:true}).click();await page.getByRole('button',{name:/已经开封，正在使用/}).click();await page.getByLabel('产品名称',{exact:true}).fill(name)}
 test('standalone HTML supports unknown entry and continuous inventory',async({page})=>{
  const failures=[],network=[];page.on('pageerror',e=>failures.push(e.message));page.on('request',r=>{if(/^https?:/.test(r.url())&&r.url()!==url)network.push(r.url())})
  await enter(page);await existing(page,'第一瓶未知面霜')
@@ -26,7 +26,7 @@ test('approximate opening range remains anchored when editing later',async({page
  await enter(page);await existing(page,'范围面霜')
  await page.getByRole('button',{name:'大概记得',exact:true}).click()
  await page.getByRole('button',{name:'有，我来填',exact:true}).click()
- await page.getByLabel('开封后使用期限（个月）').fill('6')
+ await page.getByLabel('开封后能用多久（个月）').fill('6')
  await page.getByRole('button',{name:'保存，结束整理',exact:true}).click()
  let r=await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1'))[0]);const start=r.openedEarliest,end=r.openedLatest
  expect(start).not.toBe(end);expect(r.openedDate).toBeNull()
@@ -56,12 +56,12 @@ test('query demo is nonblocking and acceptance does not create real expiry',asyn
 })
 test('opening stock moves a single record and retains packaging expiry',async({page})=>{
  await enter(page)
- await page.getByRole('button',{name:'整理已有产品',exact:true}).click()
+ await page.getByRole('button',{name:'逐项整理',exact:true}).click()
  await page.getByRole('button',{name:/尚未开封，放在囤货里/}).click();await page.getByLabel('产品名称').fill('囤货乳液')
- await page.getByText('包装有效期与分类（选填）',{exact:true}).click();await page.getByLabel('包装有效期',{exact:true}).fill('2028-01-01')
+ await page.getByText('包装上写的有效期与类型（选填）',{exact:true}).click();await page.getByLabel('包装上写的有效期（EXP）',{exact:true}).fill('2028-01-01')
  await page.getByRole('button',{name:'保存，结束整理',exact:true}).click();await page.getByRole('button',{name:'回到梳妆台',exact:true}).click()
  await page.getByRole('button',{name:'今天开了一瓶',exact:true}).click();await page.getByRole('button',{name:/从囤货柜选择/}).click();await page.getByRole('button',{name:/囤货乳液/}).click()
- await page.getByRole('button',{name:'有，我来填',exact:true}).click();await page.getByLabel('开封后使用期限（个月）').fill('12')
+ await page.getByRole('button',{name:'有，我来填',exact:true}).click();await page.getByLabel('开封后能用多久（个月）').fill('12')
  await page.getByRole('button',{name:'保存这一瓶',exact:true}).click()
  const r=await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1')));expect(r).toHaveLength(1);expect(r[0].status).toBe('active');expect(r[0].packageExpiry).toBe('2028-01-01');expect(r[0].openedDate).toBeTruthy()
 })
@@ -77,7 +77,7 @@ test('example results, archive edit and export work without external requests',a
 
 test('product types are structured and legacy names are preserved',async({page})=>{
  await enter(page);await existing(page,'选择分类的产品')
- await page.getByText('包装有效期与分类（选填）',{exact:true}).click()
+ await page.getByText('包装上写的有效期与类型（选填）',{exact:true}).click()
  await expect(page.getByLabel('产品类型',{exact:true})).toHaveValue('')
  await page.getByLabel('产品类型',{exact:true}).selectOption('面霜')
  await page.getByRole('button',{name:'保存，结束整理',exact:true}).click()
@@ -85,7 +85,7 @@ test('product types are structured and legacy names are preserved',async({page})
  await expect(page.locator('article')).toContainText('面霜')
  await page.evaluate(()=>{const k='dpao_review_prototype_v1',r=JSON.parse(localStorage.getItem(k));r[0].category='滋润护肤霜';localStorage.setItem(k,JSON.stringify(r))})
  await page.reload();await page.getByRole('button',{name:'编辑',exact:true}).click()
- await page.getByText('包装有效期与分类（选填）',{exact:true}).click()
+ await page.getByText('包装上写的有效期与类型（选填）',{exact:true}).click()
  await expect(page.getByLabel('产品类型',{exact:true})).toHaveValue('滋润护肤霜')
  await page.getByRole('button',{name:'保存这一瓶',exact:true}).click()
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1'))[0].category)).toBe('滋润护肤霜')
@@ -105,4 +105,35 @@ test('mixed record lengths keep card slots and action rows aligned',async({page}
  await page.locator('article').first().getByRole('button',{name:'详情 →',exact:true}).click()
  await expect(page.getByRole('dialog')).toContainText(records[0].name)
  await expect(page.getByRole('dialog')).toContainText('2026-01-01 至 2026-03-01')
+})
+test('sentence entry proposes fields and saves only after confirmation',async({page})=>{
+ await enter(page)
+ await page.getByRole('button',{name:'一句话录入',exact:true}).click()
+ const raw='这瓶珂润面霜今天刚开，瓶子上写着12M，EXP 2028-06-15'
+ await page.getByLabel('一句话描述').fill(raw);await page.getByRole('button',{name:'提取信息，先让我确认'}).click()
+ await expect(page.getByRole('heading',{name:'先确认，我记对了吗？'})).toBeVisible()
+ await expect(page.getByLabel('产品名称',{exact:true})).toHaveValue('珂润面霜')
+ await expect(page.getByLabel('开封后能用多久（个月）')).toHaveValue('12')
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1')||'[]').length)).toBe(0)
+ await page.getByLabel('产品名称',{exact:true}).fill('我确认后的面霜')
+ await page.getByRole('button',{name:'保存，结束整理',exact:true}).click()
+ const r=await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1'))[0])
+ expect(r.name).toBe('我确认后的面霜');expect(r.rawInput).toBe(raw);expect(r.packageExpiry).toBe('2028-06-15');expect(r.months).toBe(12);expect(r.category).toBe('面霜')
+})
+test('free-text rules preserve ambiguity and separate purchase, opening and EXP',async({page})=>{
+ await enter(page)
+ const samples=await page.evaluate(()=>[
+  extractSentence('三个月前买的珂润面霜，不记得什么时候开的'),
+  extractSentence('雅诗兰黛精华，开了两三个月，没找到开封后使用期限，帮我查'),
+  extractSentence('这瓶乳液还没拆，EXP 2027年6月'),
+  extractSentence('这瓶面霜，开了以后能用半年'),
+  extractSentence('小棕瓶，2026年1月2日开的'),
+  extractSentence('今天没开封的精华，刚买回来')
+ ])
+ expect(samples[0].dateMode).toBe('unknown');expect(samples[0].openedDate).toBe('')
+ expect(samples[1].dateMode).toBe('clue');expect(samples[1].openingNote).toContain('两三个月');expect(samples[1].lookup).toBe(true)
+ expect(samples[2].status).toBe('unopened');expect(samples[2].packageExpiry).toBe('');expect(samples[2].parseNotes.join('')).toContain('未擅自补成月末')
+ expect(samples[3].months).toBe(6);expect(samples[3].dateMode).toBe('unknown')
+ expect(samples[4].name).toBe('小棕瓶');expect(samples[4].category).toBe('');expect(samples[4].openedDate).toBe('2026-01-02')
+ expect(samples[5].status).toBe('unopened');expect(samples[5].openedDate).toBe('')
 })
