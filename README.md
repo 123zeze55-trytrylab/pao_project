@@ -37,3 +37,7 @@ npm run build
 ## 更新已有版本
 
 更新前先在旧页面导出备份。下载最新版源码到新文件夹，在旧终端按 Control+C 停止服务器，再进入新项目目录执行 `npm ci` 和 `npm run dev`。尽量沿用原访问地址及端口；浏览器记录按站点隔离，若记录未显示，可导入此前备份。代码更新不会自动同步电脑与手机的数据。
+
+## 无需安装的整理模式原型
+
+新增独立页面：`prototypes/dpao-review.html`，可以直接在浏览器中打开。也可下载 `prototypes/DPAO-demo.zip`，解压后双击 `DPAO-demo.html`。这是独立的交互评审版本，真实资料查询尚未接入，数据与原应用隔离。详见 `prototypes/README.md`。

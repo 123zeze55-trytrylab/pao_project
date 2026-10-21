@@ -1,0 +1,19 @@
+# D.PAO 整理模式交互原型
+
+直接用 Safari 或 Chrome 打开 `dpao-review.html`，不需要 Node.js、终端或服务器。也可下载同目录的 `DPAO-demo.zip`，解压后双击 `DPAO-demo.html`。整个页面的 CSS 和 JavaScript 均在 HTML 内，无外部资源依赖。
+
+建议先点击「先体验示例」，查看模拟资料；然后用「整理已有产品」连续录入手边的产品。
+
+本轮范围：已有开封产品、未开封囤货、今天新开封；准确／范围／未知开封时间；连续录入及小结；异步模拟资料返回；逐瓶确认；独立选择检查提醒；用完／停用归档；原型数据备份。
+
+所有查询结果、品牌来源和参考周期都为模拟，仅用于评审交互，不是真实产品建议。采用模拟资料不会设置真实期限。不会向互联网发送产品资料。模拟任务只在页面打开时运行；关闭后不会继续执行，也不会发送系统通知。
+
+数据使用独立存储键 `dpao_review_prototype_v1`，不会读取、修改或清除旧版 `dpao_data_v4`。只接受本原型导出的备份。浏览器对本地 HTML 存储的支持及隔离方式可能不同；移动或改名文件后若记录不可见，请通过原型备份恢复。
+
+## 验证
+
+在仓库目录运行 `npx playwright test tests/prototype.spec.js`。默认配置使用 `/usr/bin/chromium`，可用 `CHROMIUM_PATH` 指定其他 Chromium。
+
+当前云端 Chromium 管理策略拒绝 `file://` 导航。因此自动化测试通过拦截本地页面请求，直接返回 HTML 原文来验证同一页面的交互，并检查没有外部资源请求。5 条流程验证通过；未声称已在 Mac Safari 中完成本地文件实测。其他机器可以设置 `DPAO_PROTOTYPE_FILE_URL=file:///绝对路径/dpao-review.html` 验证本地打开。
+
+发布用的 `DPAO-demo.zip` 仅打包同一份 HTML，方便从 GitHub 下载。
