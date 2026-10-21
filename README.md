@@ -41,3 +41,7 @@ npm run build
 ## 无需安装的整理模式原型
 
 新增独立页面：`prototypes/dpao-review.html`，可以直接在浏览器中打开。也可下载 `prototypes/DPAO-demo.zip`，解压后双击 `DPAO-demo.html`。这是独立的交互评审版本，真实资料查询尚未接入，数据与原应用隔离。详见 `prototypes/README.md`。
+
+## DeepSeek 文字录入版
+
+最新入口：`npm run studio`，或 Mac 双击「启动DeepSeek版.command」。密钥仅在本地后端使用，默认只监听本机。完整使用及验证范围见「先读我-DeepSeek.md」。模型版需要整个项目；直接双击 HTML 只支持离线逐项录入。资料查询仍是模拟，语音尚未接入。

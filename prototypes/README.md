@@ -1,6 +1,8 @@
-# D.PAO 整理模式交互原型
+# D.PAO 整理模式与 DeepSeek 录入
 
-直接用 Safari 或 Chrome 打开 `dpao-review.html`，不需要 Node.js、终端或服务器。也可下载同目录的 `DPAO-demo.zip`，解压后双击 `DPAO-demo.html`。整个页面的 CSS 和 JavaScript 均在 HTML 内，无外部资源依赖。
+最新文字录入通过本机后端调用 DeepSeek，不再使用规则解析作为自动降级。请阅读仓库根目录「先读我-DeepSeek.md」，使用「启动DeepSeek版.command」或 `npm run studio` 打开。
+
+只打开 HTML 仍可离线逐项整理；一句话模型录入需要完整项目、本地服务和自己的 DeepSeek API Key。产品使用期限的资料查询仍为模拟，模型提取只针对当前输入。
 
 建议先点击「先体验示例」，查看模拟资料；然后用「整理已有产品」连续录入手边的产品。
 
@@ -14,7 +16,7 @@
 
 在仓库目录运行 `npx playwright test tests/prototype.spec.js`。默认配置使用 `/usr/bin/chromium`，可用 `CHROMIUM_PATH` 指定其他 Chromium。
 
-当前云端 Chromium 管理策略拒绝 `file://` 导航。因此自动化测试通过拦截本地页面请求，直接返回 HTML 原文来验证同一页面的交互，并检查没有外部资源请求。5 条流程验证通过；未声称已在 Mac Safari 中完成本地文件实测。其他机器可以设置 `DPAO_PROTOTYPE_FILE_URL=file:///绝对路径/dpao-review.html` 验证本地打开。
+测试环境的 Chromium 管理策略拒绝 `file://` 导航。因此自动化测试通过拦截本地页面请求，直接返回 HTML 原文来验证同一页面的交互，并检查没有外部资源请求。5 条流程验证通过；未声称已在 Mac Safari 中完成本地文件实测。其他机器可以设置 `DPAO_PROTOTYPE_FILE_URL=file:///绝对路径/dpao-review.html` 验证本地打开。
 
 发布用的 `DPAO-demo.zip` 仅打包同一份 HTML，方便从 GitHub 下载。
 
@@ -32,3 +34,5 @@
 用户界面使用「什么时候开封的」「开封后能用多久」「包装上写的有效期（EXP）」。专业缩写仅兼容用户原文的识别，不作为必须掌握的录入语言。
 
 文字录入确认页改为精简卡片，支持分句名称片段合并建议及口语量词清理。未说明用途的「写了12个月」需确认是开封后时长、包装总保质期还是未知；不自动混用。已用用户原句和中文月份变体验证。仍为本地启发式规则，不能作为通用语义理解能力的证明。
+
+旧规则提取函数只保留作历史回归参考，不用于当前模型入口。文字提取相关浏览器测试使用明确的模型响应桩，不是实时模型准确率测试。

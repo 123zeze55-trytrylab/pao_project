@@ -1,9 +1,21 @@
 import {test,expect} from '@playwright/test'
 import {readFileSync} from 'node:fs'
 import {resolve} from 'node:path'
+import {normalizeModel} from '../server/deepseek.js'
 const html=readFileSync(resolve('prototypes/dpao-review.html'),'utf8')
 const url=process.env.DPAO_PROTOTYPE_FILE_URL||'http://127.0.0.1:5173/prototypes/dpao-review.html'
 test.beforeEach(async({page})=>{if(!process.env.DPAO_PROTOTYPE_FILE_URL)await page.route(url,route=>route.fulfill({contentType:'text/html; charset=utf-8',body:html}))})
+// HTTP integration fixtures only. These are not live model accuracy tests.
+test.beforeEach(async({page})=>{
+ await page.route('**/api/parse',async route=>{
+  const {text,current_date}=route.request().postDataJSON()
+  const cleanser=text.includes('悦诗风吟')
+  const modelOutput={brand:{text:cleanser?'悦诗风吟':'珂润',evidence:cleanser?'悦诗风吟':'珂润'},product:{text:cleanser?'洗面奶':'面霜',evidence:cleanser?'洗面奶':'面霜'},category:{value:cleanser?'洁面':'面霜',evidence:cleanser?'洗面奶':'面霜'},status:{value:'active',evidence:cleanser?'今天开了瓶':'今天刚开'},opening:{kind:'exact',date:current_date,evidence:cleanser?'今天开了瓶':'今天刚开'},period:{kind:cleanser?'ambiguous':'opened',months:12,evidence:cleanser?(text.includes('十二')?'写了十二个月':'写了12个月'):'瓶子上写着12M'},expiry:cleanser?{}:{date:'2028-06-15',evidence:'EXP 2028-06-15'},warnings:[]}
+  const draft=normalizeModel(modelOutput,text,current_date)
+  await route.fulfill({contentType:'application/json',body:JSON.stringify({draft,engine:'deepseek',model:'deepseek-chat'})})
+ })
+})
+
 async function enter(page){await page.goto(url);await page.evaluate(()=>localStorage.removeItem('dpao_review_prototype_v1'));await page.reload()}
 async function existing(page,name){await page.getByRole('button',{name:'逐项整理',exact:true}).click();await page.getByRole('button',{name:/已经开封，正在使用/}).click();await page.getByLabel('产品名称',{exact:true}).fill(name)}
 test('standalone HTML supports unknown entry and continuous inventory',async({page})=>{
@@ -165,4 +177,15 @@ test('package duration is not converted to an opening limit',async({page})=>{
  await page.getByRole('button',{name:'保存，结束整理',exact:true}).click()
  const r=await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1'))[0])
  expect(r.months).toBeNull();expect(r.durationCandidate).toBe(12);expect(r.durationDisposition).toBe('package');expect(r.packageExpiry).toBeNull()
+})
+
+test('model service errors preserve original text and never fall back to rules',async({page})=>{
+ await enter(page)
+ await page.route('**/api/parse',route=>route.fulfill({status:503,contentType:'application/json',body:JSON.stringify({error:'尚未配置 DeepSeek API Key。'})}))
+ await page.getByRole('button',{name:'一句话录入',exact:true}).click();await page.getByLabel('一句话描述').fill('今天开了瓶洗面奶，悦诗风吟，写了12个月')
+ await page.getByRole('button',{name:'提取信息，先让我确认'}).click()
+ await expect(page.getByRole('alert')).toContainText('尚未配置')
+ await expect(page.getByLabel('一句话描述')).toHaveValue('今天开了瓶洗面奶，悦诗风吟，写了12个月')
+ await expect(page.getByRole('heading',{name:'先确认，我记对了吗？'})).toHaveCount(0)
+ expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dpao_review_prototype_v1')||'[]'))).toEqual([])
 })
