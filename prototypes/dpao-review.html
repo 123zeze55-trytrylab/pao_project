@@ -15,6 +15,7 @@
 'use strict';
 // Standalone prototype. No network requests, production storage access or actual product advice.
 const KEY='dpao_review_prototype_v1';
+const CATEGORIES=['洁面','卸妆','化妆水','精华','乳液','面霜','眼部护理','面膜','防晒','身体护理','彩妆','其他'];
 const $=s=>document.querySelector(s);
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid=()=>globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+Math.random().toString(36).slice(2);
@@ -81,7 +82,7 @@ function drawForm(error=''){
  if(d.paoMode==='manual')html+=`<label class="field">开封后使用期限（个月）<input data-field="months" aria-label="开封后使用期限（个月）" type="number" min="1" max="120" step="1" placeholder="以瓶身或品牌说明为准" value="${escape(d.months)}"></label>`;
  if(d.paoMode==='lookup')html+=`<label class="check"><input data-field="lookup" type="checkbox" ${d.lookup?'checked':''}>保存后进行模拟查询，不影响继续录入</label><div class="note">这是交互演示：不会真实搜索互联网，不会自动设置产品期限。</div>`;
  }
- html+=`<details><summary>包装有效期与分类（选填）</summary><label class="field">包装有效期<input data-field="packageExpiry" aria-label="包装有效期" type="date" value="${escape(d.packageExpiry)}"></label><p class="hint">按包装填写。购买日期不等于有效期，也不能替代开封后期限。</p><label class="field">分类<input data-field="category" aria-label="分类" maxlength="30" placeholder="例如：面霜、精华" value="${escape(d.category)}"></label></details>`;
+ html+=`<details><summary>包装有效期与分类（选填）</summary><label class="field">包装有效期<input data-field="packageExpiry" aria-label="包装有效期" type="date" value="${escape(d.packageExpiry)}"></label><p class="hint">按包装填写。购买日期不等于有效期，也不能替代开封后期限。</p><label class="field">产品类型（选填）<select data-field="category" aria-label="产品类型"><option value="" ${!d.category?'selected':''}>未分类，稍后再选</option>${d.category&&!CATEGORIES.includes(d.category)?`<option value="${escape(d.category)}" selected>原分类：${escape(d.category)}（待整理）</option>`:''}${CATEGORIES.map(c=>`<option value="${c}" ${d.category===c?'selected':''}>${c}</option>`).join('')}</select></label><p class="hint">不用自己输入名称，选择最接近的类型即可；不确定可以留空。类型不等于功效。</p></details>`;
  if(stock)html+=`<p class="hint">每次记录一瓶。同款不同有效期可以分别记录，开封时只移动选中的那瓶。</p>`;
  if(error)html+=`<p class="error" role="alert">${escape(error)}</p>`;
  html+=`<button type="submit" class="primary wide" ${state.photoBusy||readOnly?'disabled':''}>${state.photoBusy?'照片处理中…':state.edit?'保存这一瓶':'保存，继续下一瓶'}</button>${!state.edit?button('saveEnd','保存，结束整理','secondary wide'):''}</form>`;
